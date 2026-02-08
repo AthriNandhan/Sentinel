@@ -18,6 +18,7 @@ class RemediationState(BaseModel):
     
     # Green Agent Outputs
     verification_status: str = Field("PENDING", description="Verification status: PENDING, PASS, FAIL.")
+    verification_reasoning: Optional[str] = Field(None, description="Detailed reasoning from the Green Agent.")
     
     # Workflow Metadata
     iteration_count: int = Field(0, description="Current iteration of the fix-verify loop.")

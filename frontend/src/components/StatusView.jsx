@@ -81,7 +81,41 @@ const StatusView = ({ workflowId }) => {
                 </div>
             </div>
 
-            <div className="bg-gray-900 p-4 rounded border border-gray-700 font-mono text-sm h-96 overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[300px]">
+                {/* Left Column: Verification Analysis */}
+                <div className="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                    <h3 className="text-yellow-400 mb-2 font-bold flex items-center gap-2">
+                        <ShieldCheck size={16} /> Verification Analysis
+                    </h3>
+                    <div className="bg-gray-900 p-3 rounded text-gray-300 text-sm font-mono whitespace-pre-wrap border-l-4 border-yellow-500 flex-grow overflow-y-auto max-h-[400px]">
+                        {state.verification_reasoning || "Waiting for verification analysis..."}
+                    </div>
+                </div>
+
+                {/* Right Column: Patch Proposal */}
+                <div className="bg-gray-800 p-4 rounded border border-gray-700 flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-blue-400 font-bold flex items-center gap-2">
+                            <Activity size={16} /> Latest Patch
+                        </h3>
+                        {state.patch_diff && state.verification_status === 'PASS' && (
+                            <button
+                                onClick={handleApply}
+                                disabled={applying || applyMsg.includes('Successfully')}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm disabled:opacity-50"
+                            >
+                                {applying ? 'Deploying...' : (applyMsg || 'Apply Patch to File')}
+                            </button>
+                        )}
+                    </div>
+                    <pre className="bg-black p-4 rounded text-green-300 font-mono text-xs overflow-auto flex-grow max-h-[400px]">
+                        {state.patch_diff || "Waiting for patch generation..."}
+                    </pre>
+                </div>
+            </div>
+
+            {/* Bottom: Live Logs */}
+            <div className="bg-gray-900 p-4 rounded border border-gray-700 font-mono text-sm h-64 overflow-y-auto">
                 <h3 className="text-green-400 mb-2 flex items-center gap-2"><Terminal size={16} /> Live Operations Log</h3>
                 <div className="space-y-1">
                     {logs && logs.events.map((log, idx) => (
@@ -98,26 +132,6 @@ const StatusView = ({ workflowId }) => {
                     ))}
                 </div>
             </div>
-
-            {state.patch_diff && (
-                <div className="bg-gray-800 p-4 rounded border border-gray-700">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-blue-400 mb-2 font-bold">Latest Patch Proposal</h3>
-                        {state.verification_status === 'PASS' && (
-                            <button
-                                onClick={handleApply}
-                                disabled={applying || applyMsg.includes('Successfully')}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm disabled:opacity-50"
-                            >
-                                {applying ? 'Deploying...' : (applyMsg || 'Apply Patch to File')}
-                            </button>
-                        )}
-                    </div>
-                    <pre className="bg-black p-4 rounded text-green-300 font-mono text-xs overflow-x-auto">
-                        {state.patch_diff}
-                    </pre>
-                </div>
-            )}
         </div>
     );
 };

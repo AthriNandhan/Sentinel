@@ -7,9 +7,6 @@ def green_agent(state: RemediationState) -> RemediationState:
     """
     print("--- Green Agent: Verifying ---")
     
-    # In a real scenario, we would apply the patch and run tests.
-    # Here we simulate verification by asking the LLM to review the code.
-    
     prompt = f"""
     You are a Security Auditor.
     Review the following code for {state.vulnerability_type}.
@@ -19,17 +16,38 @@ def green_agent(state: RemediationState) -> RemediationState:
     {state.patch_diff}
     ```
     
-    Is this code secure against {state.vulnerability_type}?
-    Return PASS or FAIL.
+    Task:
+    1. Verify if the code is secure against {state.vulnerability_type}.
+    2. CRITICAL: Verify that NO existing functionality (helper functions, classes, imports) was removed or broken.
+       If the patch removes unrelated code (e.g., helper functions used by other modules), it must FAIL.
+    
+    Output strictly in the following format:
+    Reasoning: <Detailed analysis of security AND regression check>
+    Status: <PASS or FAIL>
     """
     
-    response = llm_service.generate_text(prompt).strip().upper()
+    response = llm_service.generate_text(prompt).strip()
     
-    if "PASS" in response:
-        state.verification_status = "PASS"
-    else:
-        state.verification_status = "FAIL"
+    # Parse the response
+    reasoning = "No reasoning provided."
+    status = "FAIL"
+    
+    for line in response.split('\n'):
+        if line.startswith("Reasoning:"):
+            reasoning = line.replace("Reasoning:", "").strip()
+        elif line.startswith("Status:"):
+            status = line.replace("Status:", "").strip().upper()
+            
+    # Fallback if parsing fails but keywords exist
+    if "Status:" not in response:
+        if "PASS" in response: status = "PASS"
+        if "FAIL" in response: status = "FAIL"
+        reasoning = response # Store full response as reasoning if format is broken
+
+    state.verification_status = status
+    state.verification_reasoning = reasoning
         
     print(f"Verification Result: {state.verification_status}")
+    print(f"Reasoning: {reasoning}")
     
     return state

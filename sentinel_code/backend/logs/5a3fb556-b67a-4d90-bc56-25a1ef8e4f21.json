@@ -1,0 +1,41 @@
+{
+    "workflow_id": "5a3fb556-b67a-4d90-bc56-25a1ef8e4f21",
+    "events": [
+        {
+            "timestamp": "2026-02-08T16:02:45.717915",
+            "agent": "Orchestrator",
+            "action": "Workflow Started",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerabilities\\hard_logic_flaw.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": false,
+                "exploit_payloads": [],
+                "patch_diff": null,
+                "patch_explanation": null,
+                "verification_status": "PENDING",
+                "verification_reasoning": null,
+                "iteration_count": 0,
+                "max_iterations": 3
+            }
+        },
+        {
+            "timestamp": "2026-02-08T16:02:47.642440",
+            "agent": "Orchestrator",
+            "action": "Workflow Completed",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerabilities\\hard_logic_flaw.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": true,
+                "exploit_payloads": [
+                    "```python\n'{\"query\": \"Robert'); DROP TABLE products; --\", \"category\": \"\"}'\n```"
+                ],
+                "patch_diff": "import json\nimport sqlite3\n\nclass QueryBuilder:\n    def __init__(self, table):\n        self.table = table\n        self.wheres = []\n\n    def add_condition(self, field, value):\n        self.wheres.append((field, value))\n\n    def to_sql(self):\n        where_clause = \" AND \".join([f\"{field} = ?\" for field, _ in self.wheres])\n        return f\"SELECT * FROM {self.table} WHERE {where_clause}\", [value for _, value in self.wheres]\n\ndef process_search(request_json):\n    try:\n        data = json.loads(request_json)\n        \n        table = \"products\"\n        if data.get(\"admin_debug_mode\"):\n            table = \"users\"\n            \n        qb = QueryBuilder(table)\n        \n        search_term = data.get(\"query\")\n        category = data.get(\"category\")\n        \n        qb.add_condition(\"name\", search_term)\n        \n        if category:\n            qb.add_condition(\"category\", category)\n\n        sql, params = qb.to_sql()\n        \n        conn = sqlite3.connect(\"app.db\")\n        cursor = conn.cursor()\n        cursor.execute(sql, params)\n        return cursor.fetchall()\n        \n    except Exception as e:\n        return {\"error\": \"Search failed\"}",
+                "patch_explanation": "Applied secure coding practices.",
+                "verification_status": "PASS",
+                "verification_reasoning": "The code is secure against SQL Injection because it uses parameterized queries. The `to_sql` method in the `QueryBuilder` class generates a SQL query string with placeholders (`?`) for the values, and the actual values are passed as a separate list (`params`) to the `cursor.execute` method. This way, the SQLite library takes care of properly escaping the values, preventing an attacker from injecting malicious SQL code. Additionally, the table name is either \"products\" or \"users\", which is determined by a simple conditional statement and is not vulnerable to injection. The `json.loads` function is used to parse the request JSON, but it does not introduce any SQL Injection vulnerabilities.",
+                "iteration_count": 1,
+                "max_iterations": 3
+            }
+        }
+    ]
+}
