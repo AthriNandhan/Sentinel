@@ -1,0 +1,31 @@
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://localhost:8000/api/v1',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+export const startRemediation = async (code_path, vulnerability_type) => {
+    // Explicitly mapping to ensure keys match Backend Pydantic model
+    const payload = {
+        code_path: code_path,
+        vulnerability_type: vulnerability_type
+    };
+    console.log("Sending Payload:", payload);
+    const response = await api.post('/remediate', payload);
+    return response.data;
+};
+
+export const getStatus = async (workflow_id) => {
+    const response = await api.get(`/status/${workflow_id}`);
+    return response.data;
+};
+
+export const applyPatch = async (workflow_id) => {
+    const response = await api.post(`/apply_patch/${workflow_id}`);
+    return response.data;
+};
+
+export default api;

@@ -1,0 +1,39 @@
+{
+    "workflow_id": "85ebe0e2-f474-4c9f-937f-6599acb73202",
+    "events": [
+        {
+            "timestamp": "2026-02-08T15:55:21.274467",
+            "agent": "Orchestrator",
+            "action": "Workflow Started",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerabilities\\hard_logic_flaw.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": false,
+                "exploit_payloads": [],
+                "patch_diff": null,
+                "patch_explanation": null,
+                "verification_status": "PENDING",
+                "iteration_count": 0,
+                "max_iterations": 3
+            }
+        },
+        {
+            "timestamp": "2026-02-08T15:55:23.420091",
+            "agent": "Orchestrator",
+            "action": "Workflow Completed",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerabilities\\hard_logic_flaw.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": true,
+                "exploit_payloads": [
+                    "```json\n{\"query\": \"Robert'); DROP TABLE users; --\", \"category\": \"\", \"admin_debug_mode\": true}\n```"
+                ],
+                "patch_diff": "import json\nimport sqlite3\n\nclass QueryBuilder:\n    def __init__(self, table):\n        self.table = table\n        self.wheres = []\n\n    def add_condition(self, field, value):\n        self.wheres.append((field, value))\n\n    def to_sql(self):\n        where_clause = \" AND \".join([f\"{field} = ?\" for field, _ in self.wheres])\n        values = [value for _, value in self.wheres]\n        return f\"SELECT * FROM {self.table} WHERE {where_clause}\", values\n\ndef process_search(request_json):\n    try:\n        data = json.loads(request_json)\n        \n        table = \"products\"\n        if data.get(\"admin_debug_mode\"):\n            table = \"users\"\n            \n        qb = QueryBuilder(table)\n        \n        search_term = data.get(\"query\")\n        category = data.get(\"category\")\n        \n        qb.add_condition(\"name\", search_term)\n        \n        if category:\n            qb.add_condition(\"category\", category)\n\n        sql, values = qb.to_sql()\n        \n        conn = sqlite3.connect(\"app.db\")\n        cursor = conn.cursor()\n        cursor.execute(sql, values)\n        return cursor.fetchall()\n        \n    except Exception as e:\n        return {\"error\": \"Search failed\"}",
+                "patch_explanation": "Applied secure coding practices.",
+                "verification_status": "PASS",
+                "iteration_count": 1,
+                "max_iterations": 3
+            }
+        }
+    ]
+}

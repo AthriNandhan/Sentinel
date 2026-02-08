@@ -1,0 +1,39 @@
+{
+    "workflow_id": "92a0462b-841e-49cf-95be-2ce8238c0b55",
+    "events": [
+        {
+            "timestamp": "2026-02-08T15:44:10.690897",
+            "agent": "Orchestrator",
+            "action": "Workflow Started",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerable_code.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": false,
+                "exploit_payloads": [],
+                "patch_diff": null,
+                "patch_explanation": null,
+                "verification_status": "PENDING",
+                "iteration_count": 0,
+                "max_iterations": 3
+            }
+        },
+        {
+            "timestamp": "2026-02-08T15:44:12.098961",
+            "agent": "Orchestrator",
+            "action": "Workflow Completed",
+            "details": {
+                "code_path": "C:\\Hype\\Major Phase 2\\vulnerable_code.py",
+                "vulnerability_type": "SQL Injection",
+                "exploit_success": true,
+                "exploit_payloads": [
+                    "' OR 1=1 --"
+                ],
+                "patch_diff": "import sqlite3\n\ndef get_user_data(username):\n    conn = sqlite3.connect(\"users.db\")\n    cursor = conn.cursor()\n    # Using parameterized query to prevent SQL Injection\n    query = \"SELECT * FROM users WHERE username = ?\"\n    cursor.execute(query, (username,))\n    return cursor.fetchall()",
+                "patch_explanation": "Applied secure coding practices.",
+                "verification_status": "PASS",
+                "iteration_count": 1,
+                "max_iterations": 3
+            }
+        }
+    ]
+}

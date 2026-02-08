@@ -64,3 +64,22 @@ async def get_status(workflow_id: str):
         "state": state.dict(),
         "logs": logs
     }
+@router.post("/apply_patch/{workflow_id}")
+async def apply_patch(workflow_id: str):
+    if workflow_id not in workflow_store:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    
+    state = workflow_store[workflow_id]
+    
+    if not state.patch_diff:
+        raise HTTPException(status_code=400, detail="No patch available to apply")
+        
+    try:
+        # In a real scenario, we might use a sandbox service here.
+        # Since patch_diff currently stores the FULL verified code:
+        with open(state.code_path, "w") as f:
+            f.write(state.patch_diff)
+            
+        return {"status": "success", "message": "Patch applied successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
